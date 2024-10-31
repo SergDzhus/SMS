@@ -16,6 +16,7 @@ def check_balance(login, password):
         response = requests.post(url, data=json.dumps(data), headers=headers)
         if response.status_code == 200:
             response_data = response.json()
+            mb.showinfo('Баланс', f"Ваш баланс {response_data['money']}")
             return response_data['money']
         else:
             mb.showerror('Ошибка',f'Произошла ошибка проверки баланса {response.status_code}')
@@ -34,17 +35,23 @@ def send_sms():
     password='12Policiy'
     sender='SDzhus'
     receiver = receiver_entry.get()
-    text = text_entry.get()
+    text = text_entry.get(1.0, END)
+
+    if len(text) > 160:
+        mb.showerror('Ошибка', f'Длина вашего сообщения {len(text)}. Она не может превышать 160 символов.')
+        return
 
     balance = check_balance(user, password)
     if balance:
         if float(balance) > 10:
+
             if not validate_phone_number(receiver):
                 mb.showinfo('Ошибка!', 'Некорректный номер телефона!')
             else:
                 url = f'https://my3.webcom.mobi/sendsms.php?user={user}&pwd={password}&sadr={sender}&dadr={receiver}&text={text}'
                 try:
                     response = requests.get(url)
+
                     if response.status_code == 200:
                         mb.showinfo('Все хорошо', 'Сообщение успешно отправлено!')
                     else:
@@ -58,14 +65,14 @@ def send_sms():
 
 window = Tk()
 window.title('Отпрака sms')
-window.geometry('250x110')
+window.geometry('300x200')
 
 Label(text='Номер получателя:').pack()
 receiver_entry = Entry()
 receiver_entry.pack()
 
 Label(text='Ввидите текст SMS:').pack()
-text_entry = Entry()
+text_entry = Text(height=6, width=30)
 text_entry.pack()
 
 send_button = Button(text='Отправить SMS', command=send_sms)
